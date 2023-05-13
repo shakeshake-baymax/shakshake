@@ -1,0 +1,16 @@
+export enum ButtonTitle {
+  UPDATE_LINKS = "Edit Social Links",
+  EDIT_PROFILE = "Edit Profile",
+  TERM_OF_SERVICES = "Terms of Service",
+  PRIVACY = "Privacy Policy",
+  HELP = "Help",
+  CONTACT_US = "Contact us",
+  FEEDBACK = "Give Us Feedfack",
+  LOGOUT = "Log Out",
+  LOGIN = "Log in",
+  SIGNUP = "Sign Up",
+  UPLOAD = "Upload",
+  UPDATE = "Update",
+  CHOOSE_FROM_LIBRARY = "Choose from library",
+  TAKE_PHOTO = "Take photo",
+}

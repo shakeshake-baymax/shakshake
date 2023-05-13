@@ -1,0 +1,10 @@
+export const INSTAGRAM_LOGO = require("./Instagram.png");
+export const TIKTOK_LOGO = require("./tiktok.png");
+export const SNAPCHAT_LOGO = require("./snapchat.png");
+export const TWITTER_LOGO = require("./twitter.png");
+export const FACEBOOK_LOGO = require("./facebook.png");
+export const LINKEDIN_LOGO = require("./Linkedin-logo.png");
+export const DISCORD_LOGO = require("./discord-mark-blue.png");
+export const PHONE_LOGO = require("./phone.png");
+export const PHONE_OUTLINE = require("./img.png");
+export const EMAIL_LOGO = require("./email.png");
