@@ -43,7 +43,6 @@ class LoginRequest {
         data,
         config
       );
-      console.log("res", response);
       if (response.data.token) {
         const user: User = createUser(response.data);
         userStorage.set(user);
@@ -52,8 +51,6 @@ class LoginRequest {
         return { error: {} };
       }
     } catch (error) {
-      console.log(error);
-
       return { error: {} };
     }
   }

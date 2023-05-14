@@ -24,7 +24,9 @@ function LogoButton(props: LogoButtonProps) {
     return (
       <Pressable
         style={{ width: p2d(60), height: p2d(60) }}
-        onPress={() => onPress(!smLink?.isExposed, smLink?.smName)}
+        onPress={() => {
+          onPress(!smLink?.isExposed, smLink?.smName);
+        }}
       >
         <ImageBackground
           source={logo}

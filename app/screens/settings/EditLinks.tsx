@@ -248,7 +248,6 @@ const EditLinkScreen = (props) => {
               return (
                 <LinkItem
                   key={data.title}
-                  hasError={data.hasError}
                   value={data.value}
                   iconUrl={data.iconUrl}
                   title={data.title}
@@ -273,28 +272,6 @@ const EditLinkScreen = (props) => {
         </View>
         {/* list */}
       </SafeAreaView>
-      {/* <PopUpView
-        opened={opened}
-        noPressed={onNo}
-        yesPressed={onYes}
-        sizeAnimation={sizeAnimation}
-      >
-        {"Discard changes?\nYour changes will not be saved."}
-      </PopUpView>
-      <PopUpView opened={alertOpened} sizeAnimation={sizeAnim}>
-        {"Error\nYou have entered invalid username/link"}
-      </PopUpView>
-      {isSaving && (
-        <LoadingView
-          color={"#7B45E7"}
-          position={"absolute"}
-          width={width}
-          height={height}
-        />
-      )} */}
-      {/* <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" />
-      </View> */}
     </>
   );
 };

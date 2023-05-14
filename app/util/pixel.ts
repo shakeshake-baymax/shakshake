@@ -5,7 +5,7 @@ const DESIGN_SIZE_WIDTH = 390;
 const { height, width } = Dimensions.get("window");
 const CURRENT_RESOLUTION = Math.sqrt(height * height + width * width);
 
-export const p2dFactory = (designSize = { width: 375, height: 812 }) => {
+export const p2dFactory = (designSize = { width: 390, height: 844 }) => {
   if (
     !designSize ||
     !designSize.width ||

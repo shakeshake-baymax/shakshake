@@ -20,16 +20,15 @@ import { Icons } from "../../components/icons";
 import ContactsHeader from "./base/ContactHeader";
 import { Swipeable } from "react-native-gesture-handler";
 import { p2d } from "../../util/pixel";
-import BoxSize from "../../components/BoxSize";
 import GradientText from "../../components/text";
 import contcatRequest from "../../api/contcat";
 import userStorage from "../../util/storage/user";
+import { Screens } from "../Screens";
 
-const ConcatListScreen = () => {
+const ConcatListScreen = (props) => {
   const insets = useSafeAreaInsets();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchText, setSearchText] = useState("");
-  const [scrollY, setScrollY] = useState(() => insets.top);
   const [contcatList, setContcatList] = useState([]);
   const flatListRef = useRef(null);
 
@@ -78,7 +77,7 @@ const ConcatListScreen = () => {
     return (
       <View
         style={{
-          height: scrollY,
+          height: insets.top,
           width: "100%",
           alignItems: "center",
           justifyContent: "center",
@@ -116,7 +115,7 @@ const ConcatListScreen = () => {
     [searchText]
   );
   // 每一项
-  const RanderItem = ({ data, onDelete }) => {
+  const RanderItem = ({ data, onDelete, onPress }) => {
     const [show, setShow] = useState(true);
     const handlerDelete = () => {
       setShow(false);
@@ -131,7 +130,6 @@ const ConcatListScreen = () => {
             t.itemsCenter,
             {
               maxWidth: p2d(100),
-              // height: p2d(50),
               backgroundColor: "#EB5545",
             },
           ]}
@@ -142,7 +140,8 @@ const ConcatListScreen = () => {
       );
     };
     return (
-      <View
+      <TouchableOpacity
+        onPress={onPress}
         style={{ paddingVertical: p2d(12.5), display: show ? "flex" : "none" }}
       >
         <Swipeable
@@ -175,7 +174,7 @@ const ConcatListScreen = () => {
             </Text>
           </View>
         </Swipeable>
-      </View>
+      </TouchableOpacity>
     );
   };
   // 点击了删除按钮
@@ -204,6 +203,9 @@ const ConcatListScreen = () => {
       </View>
     );
   };
+  const onPress = (item) => {
+    props.navigation.navigate(Screens.CONTACT_INFO, { data: item });
+  };
   return (
     <View style={[t.flex1]}>
       <ContactsHeader
@@ -225,6 +227,7 @@ const ConcatListScreen = () => {
               onDelete(item?.ID);
             }}
             key={item.ID}
+            onPress={() => onPress(item)}
           />
         )}
         refreshControl={
@@ -241,6 +244,7 @@ const ConcatListScreen = () => {
         contentContainerStyle={{
           marginTop: -insets.top,
           flex: 1,
+          backgroundColor: "white",
         }}
       />
     </View>

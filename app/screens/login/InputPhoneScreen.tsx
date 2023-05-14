@@ -8,7 +8,6 @@ import {
   Image,
   SafeAreaView,
   ScrollView,
-  Platform,
 } from "react-native";
 import Animated, {
   FadeInDown,
@@ -16,7 +15,6 @@ import Animated, {
   Layout,
 } from "react-native-reanimated";
 import PhoneInput from "react-native-phone-number-input-forked/lib/index";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { t } from "react-native-tailwindcss";
 import { p2d } from "../../util/pixel";
 import { CLEAR_BUTTON, SHAKE_TO_LINK_BG } from "../../../assets/icon";
@@ -24,58 +22,52 @@ import GradientText from "../../components/text";
 import SMSCodeView from "../../components/view/SMSCode";
 import loginRequest from "../../api/login";
 import { Icons } from "../../components/icons";
+import NumberUtility from "../../util/Utilities/NumberUtility";
 
 const InputPhoneScreen = (props) => {
   const { navigation } = props;
-  const { top } = useSafeAreaInsets();
-
   const [phoneNumber, setPhoneNumber] = useState("");
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [isValid, setIsValid] = useState(true);
+  const [isValid, setIsValid] = useState(false);
+  const [tips, setTips] = useState("");
   const [sendPressed, setSendPressed] = useState(false);
 
   //phoneNumber
   const [countryCode, setCountryCode] = useState("1");
   const phoneInput = useRef<PhoneInput>(null);
-
-  const isIos = Platform.OS === "ios";
-  const compatibilityStyle = {
-    lineHeight: 52,
-  };
-
-  const getCode = useCallback(async () => {
-    setSendPressed(true);
-    const res = await loginRequest.sendSMSCode(phoneNumber, countryCode);
-  }, [phoneNumber, countryCode]);
+  // 清除输入框
   const onClear = useCallback(() => {
     phoneInput.current?.setState({ number: "" });
   }, []);
+  // 国家代码改变
   const SetCountryCode = useCallback(
     (countryCode: string) => {
-      checkIsValid(phoneNumber, countryCode);
       setCountryCode(countryCode);
     },
     [phoneNumber]
   );
-
-  const checkIsValid = useCallback(
-    (string: string, newCountryCode?: string): boolean => {
-      if (isNaN(Number(string)) || isNaN(Number(newCountryCode))) {
-        return false;
-      }
-      return true;
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [countryCode]
-  );
-
+  // 手机号输入框改变
   const memorizedOnChangeText = useCallback(
     (string: string) => {
       setPhoneNumber(string);
-      checkIsValid(string);
+      // 当输入的手机号的尾数达到 9以上时候进行验证 验证手机号及对应的国家代码是否合法
+      // 优化的点，是根据当前国家代码来判断该国家的手机号是多少，再决定从哪个位数开始
+      if (string.length >= 10) {
+        const res = NumberUtility.validatePhoneNumber(countryCode, string);
+        if (res) {
+          setTips("");
+        } else {
+          setTips("Error - Invalid phone number");
+        }
+        setIsValid(res);
+      }
     },
-    [checkIsValid]
+    [countryCode]
   );
+  // 请求验证码
+  const getCode = useCallback(async () => {
+    setSendPressed(true);
+    await loginRequest.sendSMSCode(phoneNumber, countryCode);
+  }, [phoneNumber, countryCode]);
 
   return (
     <SafeAreaView style={[t.flex1, t.bgWhite]}>
@@ -180,13 +172,9 @@ const InputPhoneScreen = (props) => {
               />
             </View>
             <View style={styles.errorLabel}>
-              {!isValid ? (
-                <Text style={styles.errorText}>
-                  Error - Invalid phone number
-                </Text>
-              ) : undefined}
+              <Text style={styles.errorText}>{tips}</Text>
             </View>
-            {phoneNumber.length == (countryCode == "61" ? 9 : 10) && isValid ? (
+            {isValid ? (
               <Animated.View
                 style={styles.sendButton}
                 entering={FadeInDown}

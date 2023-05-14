@@ -1,5 +1,5 @@
 /*eslint-disable*/
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Pressable,
   StyleSheet,
@@ -49,6 +49,8 @@ import LogoButton from "../../components/button/LogoButton";
 import userStorage from "../../util/storage/user";
 import StringUtility from "../../util/Utilities/StringUtility";
 import { useAuth } from "../../hook/useAuth";
+import ObjectUtility from "../../util/Utilities/ObjectUtility";
+import { Screens } from "../Screens";
 export const PROD_MODE = true;
 export const VERSION_NUMBER = "0.701";
 
@@ -74,8 +76,6 @@ function HomeScreen(props) {
   });
 
   useEffect(() => {
-    console.log(currentUser);
-
     // 看下用户数据有没有变动，如果没有变动就不重新请求， 首次进入页面请求一次
     if (!isUpdate) {
       linksStateStorage.get().then((res) => {
@@ -140,18 +140,17 @@ function HomeScreen(props) {
   const onCheck = useCallback(
     (isCheck: boolean, name: SocialMedia) => {
       const newName = StringUtility.toLowerCase(name);
-      setUserData(() => {
-        return {
-          ...userData,
-          socialMediaLinks: {
-            ...userData?.["socialMediaLinks"],
-            [newName]: {
-              ...userData?.["socialMediaLinks"]?.[newName],
-              isExposed: isCheck,
-            },
+      const newData = {
+        ...userData,
+        socialMediaLinks: {
+          ...userData?.["socialMediaLinks"],
+          [newName]: {
+            ...userData?.["socialMediaLinks"]?.[newName],
+            isExposed: isCheck,
           },
-        };
-      });
+        },
+      };
+      setUserData(newData);
     },
     [userData]
   );
@@ -182,6 +181,7 @@ function HomeScreen(props) {
     Accelerometer.addListener(({ x, y, z }) => {
       if (x > 1.5 || y > 1.5 || z > 1.5) {
         console.log("摇一摇");
+        props.navigation.navigate(Screens.SHAKESHAKE);
       }
     });
 
@@ -378,8 +378,9 @@ function HomeScreen(props) {
           <Animated.View style={TipAnimationStyle}>
             <GradientText
               textStyle={{
-                fontSize: 18,
+                fontSize: p2d(16),
                 fontWeight: "700",
+                fontFamily: "Teko",
               }}
               location={[0, 1]}
               start={{ x: -0.5, y: 1 }}

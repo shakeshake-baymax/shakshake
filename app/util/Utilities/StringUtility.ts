@@ -12,6 +12,12 @@ namespace StringUtility {
     }
     return result;
   }
+  // 验证邮箱是否合法
+  export function isEmail(str: string) {
+    // 邮箱地址的正则表达式模式
+    const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return pattern.test(str);
+  }
 }
 
 export default StringUtility;

@@ -9,10 +9,13 @@ import { useEffect, useRef, useState } from "react";
 import * as SplashScreen from "expo-splash-screen";
 import { p2d } from "./app/util/pixel";
 import userStorage from "./app/util/storage/user";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 const loadFonts = async () => {
   await Font.loadAsync({
     Quantico: require("./assets/fonts/Quantico-Regular.ttf"),
+    Teko_Bold: require("./assets/fonts/Teko-Bold-5.ttf"),
+    Teko: require("./assets/fonts/Teko-Regular-2.ttf"),
   });
 };
 
@@ -69,13 +72,13 @@ export default function App() {
   }
 
   return (
-    <View style={[t.flex1]}>
+    <GestureHandlerRootView style={[t.flex1]}>
       <UserProvider>
         <ViewProvider>
           <Navigation initialRouteName={routeNameRef.current} />
         </ViewProvider>
       </UserProvider>
-    </View>
+    </GestureHandlerRootView>
   );
 }
 

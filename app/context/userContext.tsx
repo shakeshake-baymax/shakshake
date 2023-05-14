@@ -6,6 +6,7 @@ import React, {
   useState,
 } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { Profile } from "../api/models/types";
 import { User } from "../api/models/User";
 import userStorage from "../util/storage/user";
 
@@ -35,6 +36,10 @@ const UserProvider = (props: { children: React.ReactNode }) => {
   const signOut = useCallback(() => {
     setCurrentUser(null);
   }, []);
+  // 更新本地用户的配置 头像 / 背景 / 简介
+  const updateUserProfile = useCallback((profile) => {}, [currentUser]);
+  // 更新本地用户的社交链接状态
+  const updateUserLinks = useCallback((links) => {}, [currentUser]);
 
   return (
     <SafeAreaProvider>

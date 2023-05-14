@@ -16,11 +16,10 @@ import { Icons } from "./icons";
 import linksStateStorage from "../util/storage/linksState";
 import homeRequest from "../api/home";
 import userStorage from "../util/storage/user";
+import { useAuth } from "../hook/useAuth";
 
 const QRCodeView: FC<{ visible: boolean; close: () => void }> = (props) => {
   const { visible, close } = props;
-  // const {getTempPageUrl} = useCRUD();
-  // const {currentUser} = useAuth();
   const [loading, setLoading] = useState(true);
   const [url, setUrl] = useState("ShakeShake.io");
 

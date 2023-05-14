@@ -5,9 +5,9 @@ import React, {
   useRef,
   useState,
 } from "react";
-
 import {
   Keyboard,
+  Linking,
   Pressable,
   StyleSheet,
   Text,
@@ -34,6 +34,7 @@ import loginRequest from "../../api/login";
 import { User } from "../../api/models/User";
 import { AuthResult } from "../../context/userContext";
 import { Screens } from "../../screens/Screens";
+import userStorage from "../../util/storage/user";
 type SMSCodeViewProps = {
   phoneNumber: string;
   countryCode: string;
@@ -73,9 +74,9 @@ const SMSCodeView = ({
     loginRequest.sendSMSCode(phoneNumber.replace(/\s/g, ""), countryCode);
     resetTimer();
     startCounting();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phoneNumber, countryCode]);
 
+  // 进入到这个组件，当监听到input输入超过5，那么直接请求
   useEffect(() => {
     if (code.length === CODE_LENGTH) {
       Keyboard.dismiss();
@@ -85,7 +86,6 @@ const SMSCodeView = ({
           if (user !== undefined && error === undefined) {
             stopTimer();
             userRef.current = user;
-            console.log("anys", user);
             setAuthSucceeded(true);
             setShouldPlay(true);
           } else {
@@ -93,7 +93,6 @@ const SMSCodeView = ({
           }
         });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [code, phoneNumber, countryCode]);
 
   const memorizedText = useMemo(() => {
@@ -110,11 +109,14 @@ const SMSCodeView = ({
         {`A verification code has been sent to\n+${countryCode} ${phoneNumber}`}
       </Text>
     );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phoneNumber]);
+  }, [phoneNumber, countryCode]);
   // 点击了下一步
   const onNext = useCallback(() => {
     if (userRef.current) {
+      // 更新全局/本地的用户数据
+      setCurrentUser(userRef.current);
+      userStorage.set(userRef.current);
+      // 判断是新用户还是老用户 如果是新用户，那么此刻发起请求将它变为老用户
       if (userRef.current.isNewUser) {
         loginRequest.newUserSetNameFinished(userRef.current.token).then(() => {
           navigation.navigate(Screens.USERNAME_SETUP, {
@@ -122,13 +124,10 @@ const SMSCodeView = ({
           });
         });
       } else {
-        setCurrentUser(userRef.current);
         navigation.navigate(Screens.ROOT);
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userRef.current]);
-  // const nxtButton = React.useRef(null);
   return (
     <>
       <Animated.View
@@ -192,7 +191,9 @@ const SMSCodeView = ({
           </Text>
           <View style={{ flexDirection: "row", justifyContent: "center" }}>
             <TouchableOpacity
-            // onPress={() => openLink(ExternalLink.TERM_OF_SERVICES, "")}
+              onPress={() =>
+                Linking.openURL("https://www.shakeshake.io/terms-of-service")
+              }
             >
               <GradientText
                 textStyle={{ fontSize: 12, fontWeight: "700" }}
@@ -208,7 +209,9 @@ const SMSCodeView = ({
               and
             </Text>
             <TouchableOpacity
-            // onPress={() => openLink(ExternalLink.PRIVACY_POLICY, "")}
+              onPress={() =>
+                Linking.openURL("https://www.shakeshake.io/privacy-policy")
+              }
             >
               <GradientText
                 textStyle={{ fontSize: 12, fontWeight: "700" }}

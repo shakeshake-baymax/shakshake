@@ -3,7 +3,6 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import BottomTabs from "./bottomTabs";
 import { Screens } from "../screens/Screens";
-// import HomeTabs from "./BottomTabNavigator";
 import WelcomeScreen from "../screens/login/Welcome";
 import InputPhoneScreen from "../screens/login/InputPhoneScreen";
 import UsernameSetupScreen from "../screens/login/UsernameSetup";
@@ -13,29 +12,8 @@ import SettingsScreen from "../screens/settings/Settings";
 import EditLinkScreen from "../screens/settings/EditLinks";
 import EditProfileScreen from "../screens/settings/EditProfile";
 import { SelectPhoto } from "../screens/settings/SelectPhoto";
-// import { Instruction_HomeScreen1 } from "../screens/instruction/Instruction_HomeScreen1";
-// import { UserListScreen } from "../screens/home/MatchedUsersScreen";
-// import InputPhoneScreen from "../screens/authentication/InputPhoneScreen";
-// import UsernameSetupScreen from "../screens/authentication/UsernameSetupScreen";
-// import { Instruction_HomeScreen2 } from "../screens/instruction/Instruction_HomeScreen2";
-// import { Instruction_MatchScreen1 } from "../screens/instruction/Instruction_MatchScreen1";
-// import { Instruction_MatchScreen2 } from "../screens/instruction/Instruction_MatchScreen2";
-// import { Instruction_MatchScreen3 } from "../screens/instruction/Instruction_MatchScreen3";
-// import { Instruction_MatchScreen4 } from "../screens/instruction/Instruction_MatchScreen4";
-// import FirstEditLinkScreen from "../screens/userInfo/FirstEditLinkScreen";
-// import SelectSocialLinks from "../screens/userInfo/SelectSocialLinks";
-// // concat
-// import SelectPhotoScreen from "../screens/others/SelectPhotoScreen";
-// import ContactInfoScreen from "../screens/userInfo/ContactInfoScreen";
-// import ContactsListScreen from "../screens/userInfo/ContactListScreen";
-// import EditLinkScreen from "../screens/userInfo/EditLinkScreen";
-// import EditProfileScreen from "../screens/userInfo/EditProfileScreen";
-// import SettingsScreen from "../screens/userInfo/SettingsScreen";
-// // home
-// import HomeScreen from "../screens/home/HomeScreen";
-// import EditingPhotoScreen from "../screens/others/EditingPhotoScreen";
-// import DefaultPage from './defaultPage';
-// import {AppStorage} from '../hooks/useLocalStorage';
+import { ContactInfoScreen } from "../screens/home/ContactDetails";
+import { ShakeShake } from "../screens/home/Shakeshake";
 
 type NavigationProps = {
   initialRouteName: string;
@@ -63,6 +41,8 @@ const RootNavigator = (props: NavigationProps) => {
         options={{ gestureEnabled: false, animation: "fade_from_bottom" }}
         component={BottomTabs}
       />
+      <Stack.Screen name={Screens.CONTACT_INFO} component={ContactInfoScreen} />
+      <Stack.Screen name={Screens.SHAKESHAKE} component={ShakeShake} />
 
       {/* sign in ## Need to optimize */}
       <Stack.Screen name={Screens.WELCOME} component={WelcomeScreen} />
@@ -84,6 +64,8 @@ const RootNavigator = (props: NavigationProps) => {
       <Stack.Screen name={Screens.EDIT_LINKS} component={EditLinkScreen} />
       <Stack.Screen name={Screens.EDIT_PROFILE} component={EditProfileScreen} />
       <Stack.Screen name={Screens.SELECT_PHOTO} component={SelectPhoto} />
+      {/*  */}
+
       {/* Instruction_HomeScreen  ## Need to optimize*/}
       {/* <Stack.Screen
         name={Screens.INSTRUCTION_HOME1}

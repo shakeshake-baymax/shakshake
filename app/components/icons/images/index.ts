@@ -25,3 +25,18 @@ export const photo = require("./photo.png");
 export const sheet_1 = require("./sheet_1.png");
 export const sheet_2 = require("./sheet_2.png");
 export const close_white = require("./close_white.png");
+export const copy = require("./copy.png");
+// links
+export const discord = require("./discord-mark-blue.png");
+export const email = require("./email.png");
+export const facebook = require("./facebook.png");
+export const instagram = require("./Instagram.png");
+export const linkedin = require("./Linkedin-logo.png");
+export const phone_number = require("./phone.png");
+export const snapchat = require("./snapchat.png");
+export const tiktok = require("./tiktok.png");
+export const twitter = require("./twitter.png");
+// shakeshake
+export const shakeshake = require("./phone_shake.gif");
+export const shake_close = require("./phone_close.gif");
+export const shake_logo = require("./shakelogo.png");

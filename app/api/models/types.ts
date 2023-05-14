@@ -1,5 +1,5 @@
-import {ImageSourcePropType} from 'react-native';
-import {SocialMedia} from '../utilities/constants';
+import { ImageSourcePropType } from "react-native";
+import { SocialMedia } from "../../util/concat";
 export interface Profile {
   description: string;
   avatarImageUrl: string;
@@ -42,4 +42,4 @@ export interface ImageNode {
   timestamp: number;
   location: {} | null;
 }
-export {SocialMedia};
+export { SocialMedia };

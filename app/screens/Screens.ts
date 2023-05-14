@@ -8,6 +8,7 @@ export enum Screens {
   // home
   HOME = "HOME",
   CONTACT = "CONTACT",
+  SHAKESHAKE = "ShakeShake",
   // settings
   SETTINGS = "Settings",
   EDIT_LINKS = "EditLinks",

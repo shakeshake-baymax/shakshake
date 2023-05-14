@@ -13,6 +13,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { p2d } from "../util/pixel";
 import { Icons } from "./icons";
+import { FontAwesome } from "@expo/vector-icons";
 type Props = {
   containerStyle?: StyleProp<ViewStyle>;
   bothSideContainerStyle?: StyleProp<ViewStyle>;
@@ -55,13 +56,7 @@ const ArrowBack = () => {
       ]}
       onPress={goBack}
     >
-      <Icons type="headerBarArrow" onPress={goBack} size={20} />
-      {/* <FontAwesome
-        color={'#7C5BE0'}
-        name={'angle-left'}
-        size={p2d(32)}
-        onPress={goBack}
-      /> */}
+      <FontAwesome color={"#7C5BE0"} name={"angle-left"} size={p2d(32)} />
     </TouchableOpacity>
   );
 };
