@@ -3,4 +3,5 @@ export const StorageKey = {
   SOCIAL_LINKS: "socialLinks",
   LINKS_STATE: "linksState",
   PHOTO: "photo",
+  SYSTEM: "system",
 };

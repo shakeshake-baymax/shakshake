@@ -33,7 +33,9 @@ function LogoButton(props: LogoButtonProps) {
           resizeMode={"contain"}
           style={styles.backGround}
         >
-          {smLink?.isExposed && <Icons type="check" />}
+          {smLink?.smName !== "Phone number" && smLink?.isExposed && (
+            <Icons type="check" />
+          )}
         </ImageBackground>
       </Pressable>
     );

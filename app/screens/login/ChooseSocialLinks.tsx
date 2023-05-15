@@ -26,6 +26,9 @@ import {
 } from "../../../assets/single_color_logo";
 import userStorage from "../../util/storage/user";
 import { Screens } from "../Screens";
+import systemStorage from "../../util/storage/system";
+import { useNavigation } from "@react-navigation/native";
+import { User } from "../../api/models/User";
 
 type SocialItmeProps = {
   handlerCheck: (links: string, result: boolean) => void;
@@ -71,30 +74,51 @@ const SocialItme = (props: SocialItmeProps) => {
 };
 
 export default function ChooseSocialLinks(props) {
-  const params = props.route.params;
   const [socailLinksData, setSocailLinksData] = useState({});
+  const [user, setUser] = useState({});
   const [phoneNumber, setPhoneNumber] = useState();
+  const navigation = useNavigation<any>();
   const handlerSocialLinks = (links: string, result: boolean) => {
-    setSocailLinksData({ ...socailLinksData, [links]: result });
+    setSocailLinksData({
+      ...socailLinksData,
+      [links]: { ...socailLinksData[links], isExposed: result },
+    });
   };
   // click next
   const onPressNext = useCallback(() => {
     setTimeout(() => {
-      props.navigation.navigate(Screens.SETUP_SOCIAL_LINKS, {
-        user: params,
-        links: socailLinksData,
-      });
+      userStorage.set({ ...user, socialMediaLinks: socailLinksData } as User);
+      props.navigation.navigate(Screens.EDIT_LINKS);
     }, 0);
-  }, [params, socailLinksData]);
+  }, [socailLinksData]);
+
+  // 获取用户已经保存的数据
+  const asyncEffect = async () => {
+    const res = await userStorage.get();
+    setUser(res);
+    setSocailLinksData(res.socialMediaLinks);
+    setPhoneNumber(res.phoneNumber);
+    systemStorage.set({ step: 2 });
+  };
 
   useEffect(() => {
-    // 获取用户已经保存的数据
-    const asyncEffect = async () => {
-      const user = await userStorage.get();
-      setPhoneNumber(user.phoneNumber);
-    };
-    asyncEffect();
-  }, []);
+    const unsubscribe = navigation.addListener("focus", () => {
+      // 进入时获取用户已经保存的数据
+      asyncEffect();
+    });
+    return unsubscribe;
+  }, [navigation]);
+  const onGoback = () => {
+    systemStorage.set({ step: 1 });
+    if (navigation.getState().routes.length <= 1) {
+      navigation.reset({
+        index: 0,
+        routes: [{ name: Screens.USERNAME_SETUP }],
+      });
+    } else {
+      navigation.goBack();
+    }
+  };
 
   return (
     <View style={[t.flex1, t.bgWhite, t.itemsCenter]}>
@@ -103,6 +127,7 @@ export default function ChooseSocialLinks(props) {
         right="Next"
         rightStyle={{ fontSize: p2d(16), color: "#7B45E7", fontWeight: "500" }}
         onPressRight={onPressNext}
+        onPressLeft={onGoback}
       />
       <BoxSize height={p2d(80)} />
       <View style={[t.flexRow, { width: p2d(300) }]}>
@@ -123,25 +148,25 @@ export default function ChooseSocialLinks(props) {
             imgUri={EMAIL_LOGO}
             links="email"
             handlerCheck={handlerSocialLinks}
-            active={socailLinksData?.["email"] || false}
+            active={socailLinksData?.["email"]?.isExposed || false}
           />
           <SocialItme
             imgUri={INSTAGRAM_LOGO}
             links="instagram"
             handlerCheck={handlerSocialLinks}
-            active={socailLinksData?.["instagram"] || false}
+            active={socailLinksData?.["instagram"]?.isExposed || false}
           />
           <SocialItme
             imgUri={DISCORD_LOGO}
             links="discord"
             handlerCheck={handlerSocialLinks}
-            active={socailLinksData?.["discord"] || false}
+            active={socailLinksData?.["discord"]?.isExposed || false}
           />
           <SocialItme
             imgUri={TIKTOK_LOGO}
             links="tiktok"
             handlerCheck={handlerSocialLinks}
-            active={socailLinksData?.["tiktok"] || false}
+            active={socailLinksData?.["tiktok"]?.isExposed || false}
           />
         </View>
         <BoxSize height={p2d(24)} />
@@ -151,25 +176,25 @@ export default function ChooseSocialLinks(props) {
             imgUri={FACEBOOK_LOGO}
             links="facebook"
             handlerCheck={handlerSocialLinks}
-            active={socailLinksData?.["facebook"] || false}
+            active={socailLinksData?.["facebook"]?.isExposed || false}
           />
           <SocialItme
             imgUri={TWITTER_LOGO}
             links="twitter"
             handlerCheck={handlerSocialLinks}
-            active={socailLinksData?.["twitter"] || false}
+            active={socailLinksData?.["twitter"]?.isExposed || false}
           />
           <SocialItme
             imgUri={LINKEDIN_LOGO}
             links="linkedin"
             handlerCheck={handlerSocialLinks}
-            active={socailLinksData?.["linkedin"] || false}
+            active={socailLinksData?.["linkedin"]?.isExposed || false}
           />
           <SocialItme
             imgUri={SNAPCHAT_LOGO}
             links="snapchat"
             handlerCheck={handlerSocialLinks}
-            active={socailLinksData?.["snapchat"] || false}
+            active={socailLinksData?.["snapchat"]?.isExposed || false}
           />
         </View>
       </View>

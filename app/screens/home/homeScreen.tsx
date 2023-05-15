@@ -8,20 +8,9 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-// import {
-//   Screens,
-//   SocialMedia,
-//   StorageKey,
-//   storage,
-// } from "@/src/utilities/constants";
-// import { useAuth } from "@/src/hooks/useAuth";
-// import LinearGradient from "react-native-linear-gradient";
-// import IonIcon from "react-native-vector-icons/Ionicons";
-// import AntIcon from "react-native-vector-icons/AntDesign";
-import { Gesture, ScrollView } from "react-native-gesture-handler";
+import { ScrollView } from "react-native-gesture-handler";
 import { Accelerometer } from "expo-sensors";
 import Animated, {
-  runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
@@ -33,7 +22,6 @@ import { LinearGradient } from "expo-linear-gradient";
 import QRCodeView from "../../components/QRCodeView";
 import { Icons } from "../../components/icons";
 import { p2d } from "../../util/pixel";
-import linksStateStorage from "../../util/storage/linksState";
 import {
   PHONE_LOGO,
   EMAIL_LOGO,
@@ -49,46 +37,60 @@ import LogoButton from "../../components/button/LogoButton";
 import userStorage from "../../util/storage/user";
 import StringUtility from "../../util/Utilities/StringUtility";
 import { useAuth } from "../../hook/useAuth";
-import ObjectUtility from "../../util/Utilities/ObjectUtility";
 import { Screens } from "../Screens";
+import _Location from "../../util/system/locationPermission";
+import { t } from "react-native-tailwindcss";
+import { Crucifix } from "../../components/view/Crucifix";
 export const PROD_MODE = true;
 export const VERSION_NUMBER = "0.701";
 
 function HomeScreen(props) {
   const { navigation } = props;
   const [selectWindowOpened, setSelectWindow] = useState(false);
-  const { isUpdate, currentUser } = useAuth();
-
+  const { isUpdate, setIsUpdate, currentUser } = useAuth();
+  //permission
+  const [isLocation, setIsLocation] = useState(true);
   //QR modal
   const [modalOpen, setModal] = useState(false);
-  const [linkVisible, setLinkVisible] = useState({});
+  const [socialMediaLinks, setSocialMediaLinks] = useState({});
   const [userData, setUserData] = useState({});
 
   navigation.addListener("focus", () => {
     if (isUpdate) {
-      linksStateStorage.get().then((res) => {
-        setLinkVisible(res);
-      });
       userStorage.get().then((res) => {
         setUserData(res);
+        setSocialMediaLinks(res?.socialMediaLinks);
       });
+      setIsUpdate(false);
     }
   });
 
-  useEffect(() => {
-    // 看下用户数据有没有变动，如果没有变动就不重新请求， 首次进入页面请求一次
-    if (!isUpdate) {
-      linksStateStorage.get().then((res) => {
-        setLinkVisible(res);
-      });
-      userStorage.get().then((res) => {
-        setUserData(res);
-      });
-    }
-  }, []);
+  const ApplyPermission = async () => {
+    // 申请位置权限
+    const location = await _Location.apply();
+    setIsLocation(!location);
+    // 申请蓝牙权限
+    // console.log(location);
+  };
 
-  const shakingHandler = useCallback(() => {
-    console.log(1);
+  const tipsColor = useMemo(() => {
+    if (!isLocation) {
+      return "#EB5545";
+    }
+    if (selectWindowOpened) {
+      return "#FFF";
+    } else {
+      return "#7B45E7";
+    }
+  }, [selectWindowOpened, isLocation]);
+
+  useEffect(() => {
+    // 首次进入页面请求一次
+    ApplyPermission();
+    userStorage.get().then((res) => {
+      setUserData(res);
+      setSocialMediaLinks(res?.socialMediaLinks);
+    });
   }, []);
 
   //Platform Select Animation
@@ -143,9 +145,9 @@ function HomeScreen(props) {
       const newData = {
         ...userData,
         socialMediaLinks: {
-          ...userData?.["socialMediaLinks"],
+          ...socialMediaLinks,
           [newName]: {
-            ...userData?.["socialMediaLinks"]?.[newName],
+            ...socialMediaLinks?.[newName],
             isExposed: isCheck,
           },
         },
@@ -156,6 +158,9 @@ function HomeScreen(props) {
   );
 
   const movePlatform = useCallback(() => {
+    if (!isLocation) {
+      return;
+    }
     if (!PlatformSelectOpened.value) {
       //Open
       PlatformScale.value = withSpring(1);
@@ -181,7 +186,9 @@ function HomeScreen(props) {
     Accelerometer.addListener(({ x, y, z }) => {
       if (x > 1.5 || y > 1.5 || z > 1.5) {
         console.log("摇一摇");
-        props.navigation.navigate(Screens.SHAKESHAKE);
+        if (isLocation) {
+          props.navigation.navigate(Screens.SHAKESHAKE);
+        }
       }
     });
 
@@ -207,17 +214,13 @@ function HomeScreen(props) {
     <SafeAreaView style={styles.container} edges={["right", "left", "top"]}>
       <GradientText
         textStyle={styles.topText}
-        location={[0, 0.8]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
         colorSet={["#7B45E7", "#52E1FD"]}
+        location={[0, 1]}
       >
         Let's SHAKE together
       </GradientText>
-      {!PROD_MODE && (
-        <Pressable onPress={shakingHandler}>
-          <Text>Shake</Text>
-        </Pressable>
-      )}
-
       <View
         style={{
           height: "100%",
@@ -275,7 +278,7 @@ function HomeScreen(props) {
               }}
               onLayout={({
                 nativeEvent: {
-                  layout: { x, y, width, height },
+                  layout: { width },
                 },
               }) => {
                 setIndicatorViewValue(width);
@@ -290,57 +293,57 @@ function HomeScreen(props) {
               contentContainerStyle={{ paddingRight: 0 }}
             >
               <LogoButton
-                smLink={userData?.["socialMediaLinks"]?.["phone_number"]}
+                smLink={socialMediaLinks?.["phone_number"]}
                 visible={true}
                 onPress={onCheck}
                 logo={PHONE_LOGO}
               />
               <LogoButton
-                smLink={userData?.["socialMediaLinks"]?.["email"]}
-                visible={linkVisible["email"] || false}
+                smLink={socialMediaLinks?.["email"]}
+                visible={socialMediaLinks?.["email"]?.isExposed || false}
                 onPress={onCheck}
                 logo={EMAIL_LOGO}
               />
               <LogoButton
-                smLink={userData?.["socialMediaLinks"]?.["instagram"]}
+                smLink={socialMediaLinks?.["instagram"]}
                 onPress={onCheck}
-                visible={linkVisible["instrgram"] || false}
+                visible={socialMediaLinks["instagram"]?.isExposed || false}
                 logo={INSTAGRAM_LOGO}
               />
               <LogoButton
-                smLink={userData?.["socialMediaLinks"]?.["twitter"]}
+                smLink={socialMediaLinks?.["twitter"]}
                 onPress={onCheck}
-                visible={linkVisible["twitter"] || false}
+                visible={socialMediaLinks["twitter"]?.isExposed || false}
                 logo={TWITTER_LOGO}
               />
               <LogoButton
-                smLink={userData?.["socialMediaLinks"]?.["linkedin"]}
+                smLink={socialMediaLinks?.["linkedin"]}
                 onPress={onCheck}
-                visible={linkVisible["linkedin"] || false}
+                visible={socialMediaLinks["linkedin"]?.isExposed || false}
                 logo={LINKEDIN_LOGO}
               />
               <LogoButton
-                smLink={userData?.["socialMediaLinks"]?.["discord"]}
+                smLink={socialMediaLinks?.["discord"]}
                 onPress={onCheck}
-                visible={linkVisible["discord"] || false}
+                visible={socialMediaLinks["discord"]?.isExposed || false}
                 logo={DISCORD_LOGO}
               />
               <LogoButton
-                smLink={userData?.["socialMediaLinks"]?.["tiktok"]}
+                smLink={socialMediaLinks?.["tiktok"]}
                 onPress={onCheck}
-                visible={linkVisible["tiktok"] || false}
+                visible={socialMediaLinks["tiktok"]?.isExposed || false}
                 logo={TIKTOK_LOGO}
               />
               <LogoButton
-                smLink={userData?.["socialMediaLinks"]?.["snapchat"]}
+                smLink={socialMediaLinks?.["snapchat"]}
                 onPress={onCheck}
-                visible={linkVisible["snapchat"] || false}
+                visible={socialMediaLinks["snapchat"]?.isExposed || false}
                 logo={SNAPCHAT_LOGO}
               />
               <LogoButton
-                smLink={userData?.["socialMediaLinks"]?.["facebook"]}
+                smLink={socialMediaLinks?.["facebook"]}
                 onPress={onCheck}
-                visible={linkVisible["facebook"] || false}
+                visible={socialMediaLinks["facebook"]?.isExposed || false}
                 logo={FACEBOOK_LOGO}
               />
             </ScrollView>
@@ -358,37 +361,45 @@ function HomeScreen(props) {
                   end={{ x: 1, y: 0 }}
                   style={{
                     borderRadius: 80,
-                    width: p2d(80),
-                    height: p2d(80),
+                    width: p2d(60),
+                    height: p2d(60),
                     justifyContent: "center",
                     alignItems: "center",
-                    borderColor: selectWindowOpened ? "white" : "#7B45E7",
-                    borderWidth: selectWindowOpened ? 10 : 5,
+                    borderColor: tipsColor,
+                    borderWidth: 4,
                   }}
                 >
-                  <Icons
-                    type="home_btn"
-                    size={p2d(selectWindowOpened ? 25 : 45)}
-                    onPress={movePlatform}
-                  />
+                  <Crucifix color={tipsColor} />
                 </LinearGradient>
               </Animated.View>
             </Pressable>
           </Animated.View>
-          <Animated.View style={TipAnimationStyle}>
-            <GradientText
-              textStyle={{
-                fontSize: p2d(16),
-                fontWeight: "700",
-                fontFamily: "Teko",
-              }}
-              location={[0, 1]}
-              start={{ x: -0.5, y: 1 }}
-              end={{ x: 1, y: 0 }}
-              colorSet={["#52E1FD", "#7B45E7"]}
-            >
-              Set your sharing links
-            </GradientText>
+          {/* tips 提示 */}
+          <Animated.View style={[TipAnimationStyle, t.itemsCenter]}>
+            {isLocation ? (
+              <GradientText
+                textStyle={{
+                  fontSize: p2d(18),
+                  fontWeight: "700",
+                  fontFamily: "Teko",
+                }}
+                location={[0, 1]}
+                start={{ x: -0.5, y: 1 }}
+                end={{ x: 1, y: 0 }}
+                colorSet={["#52E1FD", "#7B45E7"]}
+              >
+                Set your sharing links
+              </GradientText>
+            ) : (
+              <View>
+                <Text style={styles.settingsPrivacyLocation}>
+                  We cannot read your location.
+                </Text>
+                <Text style={styles.settingsPrivacyLocation}>
+                  Setting - Privacy - Location
+                </Text>
+              </View>
+            )}
           </Animated.View>
         </View>
 
@@ -457,7 +468,7 @@ const styles = StyleSheet.create({
     height: "50%",
   },
   topText: {
-    fontFamily: "Quantico",
+    fontFamily: "Quantico_Bold",
     fontStyle: "normal",
     fontWeight: "700",
     fontSize: 25,
@@ -471,9 +482,10 @@ const styles = StyleSheet.create({
   settingsPrivacyLocation: {
     color: "#EB5545",
     fontWeight: "700",
-    fontSize: 18,
-    marginTop: 18,
+    fontSize: p2d(18),
+    marginTop: p2d(18),
     textAlign: "center",
+    fontFamily: "Quantico",
   },
   closeCircle: {
     alignSelf: "center",

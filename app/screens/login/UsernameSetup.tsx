@@ -9,7 +9,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { StyleSheet } from "react-native";
 import { Screens } from "../Screens";
 import GradientText from "../../components/text";
@@ -17,16 +17,29 @@ import { p2d } from "../../util/pixel";
 import { LinearGradient } from "expo-linear-gradient";
 import { SHAKE_TO_LINK_BG } from "../../../assets/icon";
 import loginRequest from "../../api/login";
-// import FontAwesome from "react-native-vector-icons/FontAwesome";
+import userStorage from "../../util/storage/user";
+import systemStorage from "../../util/storage/system";
+import { FontAwesome } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 
 const { height, width } = Dimensions.get("window");
 
 function UsernameSetupScreen(props) {
-  const { navigation, route } = props;
-  const { user } = route.params;
-
   const [usernameInput, setUserNameInput] = useState<string>("");
   const [emptyInput, setEmptyInput] = useState<boolean>(false);
+  const [user, setUser] = useState({});
+  const navigation = useNavigation<any>();
+
+  useEffect(() => {
+    // 从本地获取用户数据 / 把这个步骤存在本地
+    const asyncEffect = async () => {
+      const res = await userStorage.get();
+      setUserNameInput(res?.userName || "");
+      await systemStorage.set({ step: 1 });
+      setUser(res);
+    };
+    asyncEffect();
+  }, []);
 
   const nextPress = useCallback(async () => {
     const username = usernameInput.trim();
@@ -35,12 +48,25 @@ function UsernameSetupScreen(props) {
       setEmptyInput(true);
       return;
     }
-    const res = await loginRequest.newUserSetName(username, user.token);
+    const res = await loginRequest.newUserSetName(username, user["token"]);
     if (res.status === 200) {
-      user.userName = username;
+      user["userName"] = username;
       navigation.navigate(Screens.CHOOSE_SOCIAL_LINKS, user);
     }
   }, [navigation, user, usernameInput]);
+
+  const onGoback = () => {
+    systemStorage.set({ step: 0 });
+    if (navigation.getState().routes.length <= 1) {
+      navigation.reset({
+        index: 0,
+        routes: [{ name: Screens.WELCOME }],
+      });
+    } else {
+      navigation.popToTop();
+      // navigation.goBack();
+    }
+  };
 
   return (
     <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
@@ -48,17 +74,12 @@ function UsernameSetupScreen(props) {
         <View style={[styles.header]}>
           <View style={styles.buttonAndTitle}>
             <View style={styles.topHeader}>
-              <Pressable
-                style={styles.button}
-                onPress={() => {
-                  navigation.goBack();
-                }}
-              >
-                {/* <FontAwesome
+              <Pressable style={styles.button} onPress={onGoback}>
+                <FontAwesome
                   color={"#7C5BE0"}
                   name={"angle-left"}
                   size={p2d(32)}
-                /> */}
+                />
               </Pressable>
               <Pressable style={[styles.buttonContainer]} onPress={nextPress}>
                 <Text style={styles.buttonTitle}>Next</Text>

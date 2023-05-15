@@ -115,17 +115,14 @@ const SMSCodeView = ({
     if (userRef.current) {
       // 更新全局/本地的用户数据
       setCurrentUser(userRef.current);
-      userStorage.set(userRef.current);
-      // 判断是新用户还是老用户 如果是新用户，那么此刻发起请求将它变为老用户
-      if (userRef.current.isNewUser) {
-        loginRequest.newUserSetNameFinished(userRef.current.token).then(() => {
-          navigation.navigate(Screens.USERNAME_SETUP, {
-            user: userRef.current,
-          });
-        });
-      } else {
-        navigation.navigate(Screens.ROOT);
-      }
+      userStorage.set(userRef.current).then(() => {
+        // 判断是新用户还是老用户 如果是新用户，那么此刻发起请求将它变为老用户
+        if (userRef.current.isNewUser) {
+          navigation.navigate(Screens.USERNAME_SETUP);
+        } else {
+          navigation.navigate(Screens.ROOT);
+        }
+      });
     }
   }, [userRef.current]);
   return (

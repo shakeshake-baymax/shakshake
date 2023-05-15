@@ -10,10 +10,12 @@ import * as SplashScreen from "expo-splash-screen";
 import { p2d } from "./app/util/pixel";
 import userStorage from "./app/util/storage/user";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import systemStorage from "./app/util/storage/system";
 
 const loadFonts = async () => {
   await Font.loadAsync({
     Quantico: require("./assets/fonts/Quantico-Regular.ttf"),
+    Quantico_Bold: require("./assets/fonts/Quantico-Bold.ttf"),
     Teko_Bold: require("./assets/fonts/Teko-Bold-5.ttf"),
     Teko: require("./assets/fonts/Teko-Regular-2.ttf"),
   });
@@ -45,8 +47,31 @@ export default function App() {
   };
   const isNewUser = async () => {
     const res = await userStorage.get();
-    if (res?.isNewUser || JSON.stringify(res) === "{}") {
+    const step = await systemStorage.get();
+    if (JSON.stringify(res) === "{}") {
+      systemStorage.set({ step: 0 });
       setInitialRouteName(Screens.WELCOME);
+      return;
+    }
+    // 如果用户存在，并且还是新用户的情况
+    if (res?.isNewUser) {
+      // 查看他在本地的第几个步骤，为 1 在设置名称，为2在设置链接，其他情况直接返回欢迎
+      if (JSON.stringify(step) === "{}" || step?.step === 0) {
+        systemStorage.set({ step: 0 });
+        setInitialRouteName(Screens.WELCOME);
+        return;
+      }
+      if (step?.step === 1) {
+        setInitialRouteName(Screens.USERNAME_SETUP);
+        return;
+      }
+      if (step?.step === 2) {
+        setInitialRouteName(Screens.CHOOSE_SOCIAL_LINKS);
+        return;
+      }
+      if (step?.step === 0) {
+        setInitialRouteName(Screens.WELCOME);
+      }
     }
   };
   useEffect(() => {

@@ -194,7 +194,9 @@ const LinkItem = (props: LinkItemProps) => {
         { display: visible ? "flex" : "none" },
       ]}
     >
-      <View style={[t.itemsCenter, t.relative, t.justifyCenter, t.flex1]}>
+      <View
+        style={[t.itemsCenter, t.relative, t.justifyCenter, t.flex1, t.bgWhite]}
+      >
         {title !== SocialMedia.PHONE_NUMBER && (
           <>
             <Animated.View

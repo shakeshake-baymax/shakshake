@@ -46,64 +46,69 @@ import linksStateStorage from "../../util/storage/linksState";
 import loginRequest from "../../api/login";
 import StringUtility from "../../util/Utilities/StringUtility";
 import { useView } from "../../hook/useView";
-// import { AppLoading } from "expo";
+import { Screens } from "../Screens";
+import systemStorage from "../../util/storage/system";
+import { useAuth } from "../../hook/useAuth";
 
 const EditLinkScreen = (props) => {
   const { navigation } = props;
-  const { loadingView } = useView();
-  const [linksState, setLinksState] = useState<any>(); // 页面是否显示单个社交链接
+  const { loadingView, confirmView } = useView();
   const [delVisible, setDelVisible] = useState(false); // 是否显示删除
   const [socialMediaLinks, setSocialMediaLinks] = useState({}); // 所有的社交链接， 先从后台获取
+  const { setIsUpdate } = useAuth();
   useEffect(() => {
     // 获取本地存储的数据
     const asyncEffect = async () => {
       const res = await userStorage.get();
-      const waitLinks = await linksStateStorage.get();
       setSocialMediaLinks(res.socialMediaLinks || {});
-      setLinksState(waitLinks);
     };
     asyncEffect();
   }, []);
 
   const hasInvalidInput = useRef(false);
-  const savePress = useCallback(async () => {
-    loadingView.show();
-    // linkState / socialMediaLinks 保存到本地 把修改之后的数据传递到后台
-    await linksStateStorage.set(linksState);
-    // 修改本地存储， 发起请求修改后端存储
-    const userData = await userStorage.get();
-    const token = userData.token;
-    const newData = {
-      ...userData,
-      socialMediaLinks,
-    };
-    userStorage.set(newData).then(async () => {
-      // 注意这个验证的时候需要传递token
-      loginRequest.updateSMLinks(socialMediaLinks, token).then((res) => {
-        loadingView.hide();
-        // 跳转到主页
-        props.navigation.goBack();
+  const savePress = useCallback(
+    async (next: boolean) => {
+      setIsUpdate(true);
+      loadingView.show();
+      // 修改本地存储， 发起请求修改后端存储
+      const userData = await userStorage.get();
+      const token = userData.token;
+      const newData = {
+        ...userData,
+        socialMediaLinks,
+      };
+      userStorage.set(newData).then(async () => {
+        // 注意这个验证的时候需要传递token
+        loginRequest.updateSMLinks(socialMediaLinks, token).then((res) => {
+          loadingView.hide();
+          // 返回还是跳转主页
+          if (next) {
+            // 跳转主页前表示用户已经完成所有的步骤设置为0
+            systemStorage.set({ step: 0 }).then(() => {
+              loginRequest.newUserSetNameFinished(userData.token).then(() => {
+                props.navigation.navigate(Screens.ROOT);
+              });
+            });
+          } else {
+            props.navigation.goBack();
+          }
+        });
       });
-    });
-  }, [socialMediaLinks, linksState]);
-
-  // const onNo = useCallback(() => {
-  //   // dismissView();
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, []);
-
-  // const onYes = useCallback(() => {
-  //   console.debug("onYes");
-  //   if (unsubscribe.current) {
-  //     unsubscribe.current();
-  //     // dismissView();
-  //     navigation.goBack();
-  //   }
-  // }, [navigation, unsubscribe.current]);
+    },
+    [socialMediaLinks]
+  );
 
   const onBack = useCallback(() => {
-    navigation.goBack();
-  }, [navigation]);
+    confirmView.show({
+      onNo: () => {
+        navigation.goBack();
+      },
+      onYes() {
+        savePress(false);
+      },
+      context: "Whether to save your actions",
+    });
+  }, [navigation, savePress]);
 
   const onTextChange = useCallback(
     (text: string | null, socialMedia: string) => {
@@ -125,15 +130,23 @@ const EditLinkScreen = (props) => {
   }, []);
 
   const RanderRight = () => (
-    <Pressable onPress={savePress}>
+    <Pressable onPress={() => savePress(true)}>
       <Text style={{ fontSize: p2d(16), fontWeight: "500", color: "#7B45E7" }}>
-        Save
+        Next
       </Text>
     </Pressable>
   );
   // 设置link是否显示
   const delSocialLinks = (name: string) => {
-    setLinksState({ ...linksState, [name]: false });
+    const origin = socialMediaLinks[name];
+    setSocialMediaLinks({
+      ...socialMediaLinks,
+      [name]: {
+        ...origin,
+        isExposed: false,
+        link: "",
+      },
+    });
   };
 
   const dataForUI = useMemo(() => {
@@ -152,7 +165,7 @@ const EditLinkScreen = (props) => {
         iconUrl: EMAIL_LOGO,
         title: SocialMedia.EMAIL,
         placeHolder: "Your email address",
-        visible: linksState?.["email"] || false,
+        visible: socialMediaLinks?.["email"]?.isExposed || false,
         delSocialLinks: () => delSocialLinks("email"),
       },
       {
@@ -161,8 +174,8 @@ const EditLinkScreen = (props) => {
         iconUrl: INSTAGRAM_LOGO,
         title: SocialMedia.INSTAGRAM,
         placeHolder: "@ Your instagram's user name",
-        visible: linksState?.["instrgram"] || false,
-        delSocialLinks: () => delSocialLinks("instrgram"),
+        visible: socialMediaLinks?.["instagram"]?.isExposed || false,
+        delSocialLinks: () => delSocialLinks("instagram"),
       },
       {
         value: socialMediaLinks?.["twitter"]?.link || "",
@@ -170,7 +183,7 @@ const EditLinkScreen = (props) => {
         iconUrl: TWITTER_LOGO,
         title: SocialMedia.TWITTER,
         placeHolder: "@ Your twitter's username",
-        visible: linksState?.["twitter"] || false,
+        visible: socialMediaLinks?.["twitter"]?.isExposed || false,
         delSocialLinks: () => delSocialLinks("twitter"),
       },
       {
@@ -179,7 +192,7 @@ const EditLinkScreen = (props) => {
         iconUrl: LINKEDIN_LOGO,
         title: SocialMedia.LINKEDIN,
         placeHolder: "Link to your linkedin profile",
-        visible: linksState?.["linkedin"] || false,
+        visible: socialMediaLinks?.["linkedin"]?.isExposed || false,
         delSocialLinks: () => delSocialLinks("linkedin"),
       },
       {
@@ -188,7 +201,7 @@ const EditLinkScreen = (props) => {
         iconUrl: FACEBOOK_LOGO,
         title: SocialMedia.FACEBOOK,
         placeHolder: "Link to your facebook profile",
-        visible: linksState?.["facebook"] || false,
+        visible: socialMediaLinks?.["facebook"]?.isExposed || false,
         delSocialLinks: () => delSocialLinks("facebook"),
       },
       {
@@ -197,7 +210,7 @@ const EditLinkScreen = (props) => {
         iconUrl: TIKTOK_LOGO,
         title: SocialMedia.TIKTOK,
         placeHolder: "@ Your tiktok's username",
-        visible: linksState?.["tiktok"] || false,
+        visible: socialMediaLinks?.["tiktok"]?.isExposed || false,
         delSocialLinks: () => delSocialLinks("tiktok"),
       },
       {
@@ -206,7 +219,7 @@ const EditLinkScreen = (props) => {
         iconUrl: DISCORD_LOGO,
         title: SocialMedia.DISCORD,
         placeHolder: "Link to your discord channel",
-        visible: linksState?.["discord"] || false,
+        visible: socialMediaLinks?.["discord"]?.isExposed || false,
         delSocialLinks: () => delSocialLinks("discord"),
       },
       {
@@ -215,7 +228,7 @@ const EditLinkScreen = (props) => {
         iconUrl: SNAPCHAT_LOGO,
         title: SocialMedia.SNAPCHAT,
         placeHolder: "@ Your snapchat's username",
-        visible: linksState?.["snapchat"] || false,
+        visible: socialMediaLinks?.["snapchat"]?.isExposed || false,
         delSocialLinks: () => delSocialLinks("snapchat"),
       },
     ];
@@ -232,8 +245,7 @@ const EditLinkScreen = (props) => {
         };
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [delVisible, linksState, socialMediaLinks]);
-
+  }, [delVisible, socialMediaLinks]);
   return (
     <>
       <SafeAreaView edges={["bottom"]} style={[styles.scrollContainer]}>
@@ -262,7 +274,7 @@ const EditLinkScreen = (props) => {
             })}
             <BoxSize height={50} />
             <EditLinkButton
-              links={{ data: linksState, setData: setLinksState }}
+              links={{ data: socialMediaLinks, setData: setSocialMediaLinks }}
               setDelVisible={(visiable) => {
                 setDelVisible(visiable);
               }}
@@ -344,7 +356,14 @@ const EditLinkButton = (props: EditLinkButtonProps) => {
   };
 
   const blockOnPress = (name: string) => {
-    links.setData({ ...links.data, [name]: true });
+    const origin = links.data[name];
+    links.setData({
+      ...links.data,
+      [name]: {
+        ...origin,
+        isExposed: true,
+      },
+    });
   };
 
   return (
@@ -384,42 +403,42 @@ const EditLinkButton = (props: EditLinkButtonProps) => {
       >
         <AddedBlock
           iconUrl={EMAIL_LOGO}
-          visiable={links.data?.["email"]}
+          visiable={links.data?.["email"]?.isExposed}
           click={() => blockOnPress("email")}
         />
         <AddedBlock
           iconUrl={INSTAGRAM_LOGO}
-          visiable={links.data?.["instrgram"]}
-          click={() => blockOnPress("instrgram")}
+          visiable={links.data?.["instagram"]?.isExposed}
+          click={() => blockOnPress("instagram")}
         />
         <AddedBlock
           iconUrl={TWITTER_LOGO}
-          visiable={links.data?.["twitter"]}
+          visiable={links.data?.["twitter"]?.isExposed}
           click={() => blockOnPress("twitter")}
         />
         <AddedBlock
           iconUrl={LINKEDIN_LOGO}
-          visiable={links.data?.["linkedin"]}
+          visiable={links.data?.["linkedin"]?.isExposed}
           click={() => blockOnPress("linkedin")}
         />
         <AddedBlock
           iconUrl={FACEBOOK_LOGO}
-          visiable={links.data?.["facebook"]}
+          visiable={links.data?.["facebook"]?.isExposed}
           click={() => blockOnPress("facebook")}
         />
         <AddedBlock
           iconUrl={TIKTOK_LOGO}
-          visiable={links.data?.["tiktok"]}
+          visiable={links.data?.["tiktok"]?.isExposed}
           click={() => blockOnPress("tiktok")}
         />
         <AddedBlock
           iconUrl={DISCORD_LOGO}
-          visiable={links.data?.["discord"]}
+          visiable={links.data?.["discord"]?.isExposed}
           click={() => blockOnPress("discord")}
         />
         <AddedBlock
           iconUrl={SNAPCHAT_LOGO}
-          visiable={links.data?.["snapchat"]}
+          visiable={links.data?.["snapchat"]?.isExposed}
           click={() => blockOnPress("snapchat")}
         />
       </Animated.ScrollView>

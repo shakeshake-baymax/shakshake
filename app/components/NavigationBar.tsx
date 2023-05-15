@@ -43,21 +43,16 @@ type Props = {
 };
 
 const ArrowBack = () => {
-  const navigation = useNavigation();
-  const goBack = () => {
-    navigation.goBack();
-  };
   return (
-    <TouchableOpacity
+    <View
       style={[
         t.justifyCenter,
         t.itemsCenter,
         { height: p2d(32), width: p2d(32) },
       ]}
-      onPress={goBack}
     >
       <FontAwesome color={"#7C5BE0"} name={"angle-left"} size={p2d(32)} />
-    </TouchableOpacity>
+    </View>
   );
 };
 
@@ -198,7 +193,11 @@ const NavigationBar = ({
           t.flex,
           bothSideContainerStyle,
           leftContainerStyle,
-          { paddingLeft: p2d(10), paddingVertical: p2d(10), width: "15%" },
+          {
+            paddingLeft: p2d(10),
+            paddingVertical: p2d(10),
+            width: "15%",
+          },
         ]}
         onPress={(_) => (onPressLeft ? onPressLeft() : navigation.goBack())}
       >
