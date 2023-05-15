@@ -68,7 +68,7 @@ function HomeScreen(props) {
   const ApplyPermission = async () => {
     // 申请位置权限
     const location = await _Location.apply();
-    setIsLocation(!location);
+    setIsLocation(location);
     // 申请蓝牙权限
     // console.log(location);
   };
